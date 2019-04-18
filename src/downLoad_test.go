@@ -22,7 +22,7 @@ func TestDownLoadTask_Start(t *testing.T) {
 	}
 	var lath sync.WaitGroup
 	lath.Add(1)
-	go task.Start(lath)
+	go task.Start(&lath) // 这里需要传递引用
 	for i := 0; i < 100; i++ {
 		url <- "https://www.baidu.com/img/bd_logo1.png"
 	}

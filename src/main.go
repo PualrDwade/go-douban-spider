@@ -29,6 +29,7 @@ var dao Persistence
 // 爬取的标签类型
 var tags []string
 
+
 // tv
 type TV struct {
 	Id       string `json:"id"`       //豆瓣ID
