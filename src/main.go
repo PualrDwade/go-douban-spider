@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strconv"
 	"sync"
+	"time"
 )
 
 //豆瓣tv标签链接
@@ -28,7 +29,6 @@ var dao Persistence
 
 // 爬取的标签类型
 var tags []string
-
 
 // tv
 type TV struct {
@@ -105,6 +105,6 @@ func main() {
 		url := tvs[i].Image
 		urls <- url //into channel
 	}
-	//time.Sleep(time.Second * 10)
+	time.Sleep(time.Second * 10)
 	lath.Done()
 }
