@@ -13,4 +13,4 @@ import (
 // page_limit = xxx :每爬取一次显示的items数量
 // page_start = xxx: 当前爬取位置,设置为爬取次数i*page_limits
 
-var StartLink = "https://movie.douban.com/j/search_subjects?type=tv&tag=热门&page_limit=" + strconv.Itoa(10) + "&page_start=0"
+var StartLink = "https://movie.douban.com/j/search_subjects?type=tv&tag=热门&page_limit=" + strconv.Itoa(1000000) + "&page_start=0"

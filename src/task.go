@@ -34,6 +34,7 @@ func CreateSpiderTask(resources chan string, results chan TV, finish chan bool) 
 }
 
 func (this *spiderTask) Start() {
+	log.Info("[蜘蛛启动完成]")
 	// 发起网络请求,请求tv的url
 	response, err := http.Get(StartLink)
 	if err != nil {
@@ -93,7 +94,7 @@ func (this *downLoadTask) Start() {
 		log.Error(err.Error())
 		return
 	}
-	const routines = 100 //设定rouines数量
+	const routines = 10000 //设定rouines数量
 	log.Info("[多线程下载器启动完成]")
 	for i := 0; i < routines; i++ {
 		go func() {
@@ -143,12 +144,17 @@ func CreatePersistenceTask(persistence Persistence, results chan TV) Task {
 }
 
 func (this *persistenceTask) Start() {
-	for true {
-		tv := <-this.Results
-		_, err := this.Persistence.SaveOne(tv)
-		if err != nil {
-			log.Error(err.Error())
-			continue
-		}
+	log.Info("[持久化任务启动完成]")
+	for i := 0; i < 100; i++ {
+		go func() {
+			for true {
+				tv := <-this.Results
+				_, err := this.Persistence.SaveOne(tv)
+				if err != nil {
+					log.Error(err.Error())
+					continue
+				}
+			}
+		}()
 	}
 }
