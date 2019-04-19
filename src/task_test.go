@@ -20,9 +20,11 @@ func TestDownLoadTask_Start(t *testing.T) {
 	if task == nil {
 		t.Fail()
 	}
-	go task.Start() // 这里需要传递引用
+	go task.Start()
 	for i := 0; i < 10; i++ {
 		url <- "https://www.baidu.com/img/bd_logo1.png"
 	}
-	<-finish
+	for i := 0; i < 10; i++ {
+		<-finish
+	}
 }
