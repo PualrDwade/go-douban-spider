@@ -7,8 +7,6 @@ import (
 	"math"
 	"net/http"
 	"strconv"
-	"sync"
-	"time"
 )
 
 //豆瓣tv标签链接
@@ -56,28 +54,22 @@ func ParseJson(content []byte) ([]TV, error) {
 }
 
 func main() {
-	//启动多线程图片加载器
-	urls := make(chan string)
-	downLoadTask := CreateDownLoadTask("./download", urls)
-	var lath sync.WaitGroup
-	lath.Add(1)
-	go downLoadTask.Start(&lath) //启动下载任务
-
-	// 发起网络请求
+	// 发起网络请求,请求tv的url
 	response, err := http.Get(URL)
 	if err != nil {
 		log.Info(err.Error())
 		return
 	}
 	defer response.Body.Close()
-	body, err := ioutil.ReadAll(response.Body)
 
+	body, err := ioutil.ReadAll(response.Body)
 	var result map[string]interface{}
 	err = json.Unmarshal(body, &result)
 	if err != nil {
 		log.Error(err.Error())
 		return
 	}
+
 	// 从map中取出需要的内容
 	jsonTVs := result["subjects"].([]interface{})
 	// 持久化,使用mongodb
@@ -101,10 +93,17 @@ func main() {
 	}
 	log.Info("爬取到内容:", tvs)
 
+	//启动多线程图片加载器,进行资源的下载
+	urls := make(chan string) //使用make构造引用类型
+	finish := make(chan bool) //结束flag
+	downLoadTask := CreateDownLoadTask("./download", urls, finish)
+	go downLoadTask.Start() //启动下载任务
 	for i := 0; i < len(tvs); i++ {
 		url := tvs[i].Image
 		urls <- url //into channel
 	}
-	time.Sleep(time.Second * 10)
-	lath.Done()
+	for i := 0; i < len(tvs); i++ {
+		<-finish
+	}
+	log.Info("爬虫程序退出")
 }
