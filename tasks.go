@@ -10,7 +10,6 @@ import (
 	"strings"
 )
 
-//模块只暴露接口,隐藏具体实现,具体实现由对应的工厂方法注入依赖模块中
 type Task interface {
 	Start()
 }
