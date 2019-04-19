@@ -3,7 +3,7 @@ package main
 import "encoding/json"
 
 // tv-model
-type TV struct {
+type Item struct {
 	Id       string `json:"id"`       //豆瓣ID
 	Rate     string `json:"rate"`     //评分
 	Title    string `json:"title"`    //电视剧标题
@@ -14,14 +14,14 @@ type TV struct {
 }
 
 // 解析json
-func ParseJson(content []byte) ([]TV, error) {
+func ParseJson(content []byte) ([]Item, error) {
 	// 首先使用map 接受json内容
 	var result map[string]interface{}
 	err := json.Unmarshal(content, &result)
 	// 从map中取出需要的内容
 	jsonTVs := result["subjects"].([]interface{})
 	// 作为返回结果
-	var resultTvs []TV
+	var resultTvs []Item
 	jsonString, err := json.Marshal(jsonTVs)
 	err = json.Unmarshal(jsonString, &resultTvs)
 	return resultTvs, err

@@ -7,13 +7,15 @@ import (
 
 func main() {
 
-	// 1.蜘蛛任务->得到results-tv(chan)*2 -生产者
-	// 2.持久化任务->消费results1-tv(chan)->持久化->消费者
-	// 3.下载器任务->消费results2-tv(chan)->下载model中的图片资源->消费者
+	// 1.预处理器->解析url->urls(chan)-生产者
+	// 2.蜘蛛任务->得到results-tv(chan)*2 -(消费者,消费urls)+(生产者)
+	// 3.持久化引擎->消费results1-tv(chan)->持久化->消费者
+	// 4.下载器->消费results2-tv(chan)->下载model中的图片资源->消费者
 
-	results := make(chan TV)       //对应results1
-	resources := make(chan string) //对应results2
-	finish := make(chan bool)      //控制信号
+	urls := make(chan string)
+	results := make(chan Item)
+	resources := make(chan string)
+	finish := make(chan bool)
 
 	//1.启动下载器任务
 	downLoadTask := CreateDownLoadTask("./download", resources, finish)
@@ -24,8 +26,12 @@ func main() {
 	go persistenceTask.Start()
 
 	//3.启动蜘蛛任务
-	spiderTask := CreateSpiderTask(resources, results, finish)
+	spiderTask := CreateSpiderTask(resources, results, urls, finish)
 	go spiderTask.Start()
+
+	//4.启动预处理器任务
+	prepareTask := CreatePrepareTask(urls)
+	go prepareTask.Start()
 
 	time.Sleep(time.Second * 20)
 	log.Info("爬虫程序退出")
