@@ -2,8 +2,8 @@ package main
 
 import "encoding/json"
 
-// tv-model
-type Item struct {
+// 实体model
+type Result struct {
 	Id       string `json:"id"`       //豆瓣ID
 	Rate     string `json:"rate"`     //评分
 	Title    string `json:"title"`    //电视剧标题
@@ -13,15 +13,22 @@ type Item struct {
 	IsNew    bool   `json:"is_new"`   //是否是新TV
 }
 
+// 资源model
+type Resource struct {
+	Url  string
+	Type string
+	Tag  string
+}
+
 // 解析json
-func ParseJson(content []byte) ([]Item, error) {
+func ParseJson(content []byte) ([]Result, error) {
 	// 首先使用map 接受json内容
 	var result map[string]interface{}
 	err := json.Unmarshal(content, &result)
 	// 从map中取出需要的内容
 	jsonTVs := result["subjects"].([]interface{})
 	// 作为返回结果
-	var resultTvs []Item
+	var resultTvs []Result
 	jsonString, err := json.Marshal(jsonTVs)
 	err = json.Unmarshal(jsonString, &resultTvs)
 	return resultTvs, err

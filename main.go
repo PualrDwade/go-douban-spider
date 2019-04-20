@@ -13,8 +13,8 @@ func main() {
 	// 4.下载器->消费results2-tv(chan)->下载model中的图片资源->消费者
 
 	urls := make(chan string)
-	results := make(chan Item)
-	resources := make(chan string)
+	results := make(chan Result)
+	resources := make(chan Resource)
 	finish := make(chan bool)
 
 	//1.启动下载器任务
@@ -33,6 +33,6 @@ func main() {
 	prepareTask := CreatePrepareTask(urls)
 	go prepareTask.Start()
 
-	time.Sleep(time.Second * 20)
+	time.Sleep(time.Second * 30)
 	log.Info("爬虫程序退出")
 }

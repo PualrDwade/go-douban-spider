@@ -18,13 +18,13 @@ type Task interface {
 //爬虫任务
 type SpiderTask struct {
 	Name      string
-	Resources chan string //爬取资源
-	Results   chan Item   //爬取结果
-	Urls      chan string //请求链接
-	Finish    chan bool   //结束标签
+	Resources chan Resource //爬取资源
+	Results   chan Result   //爬取结果
+	Urls      chan string   //请求链接
+	Finish    chan bool     //结束标签
 }
 
-func CreateSpiderTask(resources chan string, results chan Item, urls chan string, finish chan bool) Task {
+func CreateSpiderTask(resources chan Resource, results chan Result, urls chan string, finish chan bool) Task {
 	task := SpiderTask{
 		Name:      "default downLoad task",
 		Resources: resources,
@@ -38,7 +38,9 @@ func CreateSpiderTask(resources chan string, results chan Item, urls chan string
 func (this *SpiderTask) Start() {
 	go func() {
 		for true {
-			response, err := http.Get(<-this.Urls)
+			//从channel中取出url进行抓取
+			url := <-this.Urls
+			response, err := http.Get(url)
 			if err != nil {
 				log.Info(err.Error())
 				return
@@ -60,7 +62,12 @@ func (this *SpiderTask) Start() {
 			// 存入chnnel
 			for e := range tvs {
 				this.Results <- tvs[e]
-				this.Resources <- tvs[e].Image
+				queryParams := QueryParams(url)
+				this.Resources <- Resource{
+					Url:  tvs[e].Image,
+					Type: queryParams["type"],
+					Tag:  queryParams["tag"],
+				}
 			}
 			response.Body.Close()
 		}
@@ -72,58 +79,46 @@ func (this *SpiderTask) Start() {
 type DownLoadTask struct {
 	Name     string
 	DirPath  string
-	Resource chan string //chan,协程使用
-	Finish   chan bool   //chan,作为工作停止信号
+	Resource chan Resource //chan,协程使用
+	Finish   chan bool     //chan,作为工作停止信号
 }
 
-func CreateDownLoadTask(dirPath string, url chan string, finish chan bool) Task {
+func CreateDownLoadTask(dirPath string, resouce chan Resource, finish chan bool) Task {
 	task := DownLoadTask{
 		Name:     "default downLoad task",
 		DirPath:  dirPath,
-		Resource: url,
+		Resource: resouce,
 		Finish:   finish,
 	}
 	return &task
 }
 
 func (this *DownLoadTask) Start() {
-	// 首先创建文件夹
-	err := os.Mkdir(this.DirPath, 0777)
-	if err != nil {
-		//如果已经存在则直接进入
-		log.Info("文件夹", this.DirPath, "已经存在,直接进入.")
-	}
-	err = os.Chdir(this.DirPath)
-	if err != nil {
-		log.Error(err.Error())
-		return
-	}
 	const routines = 10000 //设定rouines数量
 	log.Info("[多线程下载器启动完成]")
 	for i := 0; i < routines; i++ {
 		go func() {
 			for true {
-				url := <-this.Resource               //从channel取得图片url
-				urlSplits := strings.Split(url, "/") //切割url得到文件名
+				//从channel取得图片url
+				resource := <-this.Resource
+				//切割url得到文件名
+				urlSplits := strings.Split(resource.Url, "/")
 				imgName := urlSplits[len(urlSplits)-1]
 				log.Info("[正在下载图片]:", imgName)
-				response, err := http.Get(url)
+				response, err := http.Get(resource.Url)
 				if err != nil {
 					log.Error(err.Error())
-					return
+					continue
 				}
-				out, err := os.Create(imgName)
-				if err != nil {
-					log.Error(err.Error())
-					return
-				}
-				_, err = io.Copy(out, response.Body)
-				if err != nil {
-					log.Error(err)
-					return
-				}
+				// 计算图片保存路径
+				savePath := this.DirPath + "/" + resource.Type + "/" + resource.Tag
+				_ = os.MkdirAll(savePath, 0777)
+				out, _ := os.Create(savePath + "/" + imgName)
+				_, _ = io.Copy(out, response.Body)
 				log.Info("[图片]:", imgName, "下载完成")
 				this.Finish <- true
+				_ = os.Chdir("..")
+				_ = os.Chdir("..")
 				response.Body.Close()
 				out.Close()
 			}
@@ -135,10 +130,10 @@ func (this *DownLoadTask) Start() {
 type PersistenceTask struct {
 	Name        string
 	Persistence Persistence
-	Results     chan Item
+	Results     chan Result
 }
 
-func CreatePersistenceTask(persistence Persistence, results chan Item) Task {
+func CreatePersistenceTask(persistence Persistence, results chan Result) Task {
 	task := PersistenceTask{
 		Name:        "default persistencee Task",
 		Persistence: persistence,
