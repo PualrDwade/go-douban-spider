@@ -137,15 +137,15 @@ func CreatePersistenceTask(persistence Persistence, results chan Result) Task {
 }
 
 func (this *PersistenceTask) Start() {
-	if this.Persistence == nil {
-		log.Error("[持久化任务启动失败,请检查数据库配置]")
-		return //没有配置对应的数据库,直接返回
-	}
 	for i := 0; i < 1000; i++ {
 		go func() {
 			for true {
 				tv := <-this.Results
-				_, err := this.Persistence.SaveOne(tv)
+				id, err := this.Persistence.SaveOne(tv)
+				if id == nil {
+					log.Error("[持久化配置]:失效,routine退出")
+					return
+				}
 				if err != nil {
 					log.Error(err.Error())
 					continue
