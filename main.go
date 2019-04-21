@@ -12,10 +12,10 @@ func main() {
 	// 3.持久化引擎->消费results1-tv(chan)->持久化->消费者
 	// 4.下载器->消费results2-tv(chan)->下载model中的图片资源->消费者
 
-	urls := make(chan string, 100)
-	results := make(chan Result, 100)
-	resources := make(chan Resource, 100)
-	finish := make(chan bool, 100)
+	urls := make(chan string)
+	results := make(chan Result)
+	resources := make(chan Resource)
+	finish := make(chan bool)
 
 	//1.启动下载器任务
 	downLoadTask := CreateDownLoadTask("./download", resources, finish)
@@ -33,6 +33,6 @@ func main() {
 	prepareTask := CreatePrepareTask(urls)
 	go prepareTask.Start()
 
-	time.Sleep(time.Second * 200)
+	time.Sleep(time.Second * 30)
 	log.Info("爬虫程序退出")
 }

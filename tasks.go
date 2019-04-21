@@ -24,6 +24,21 @@ type SpiderTask struct {
 	Finish    chan bool     //结束标签
 }
 
+//下载器任务
+type DownLoadTask struct {
+	Name     string
+	DirPath  string
+	Resource chan Resource //chan,协程使用
+	Finish   chan bool     //chan,作为工作停止信号
+}
+
+//数据持久化任务
+type PersistenceTask struct {
+	Name        string
+	Persistence Persistence
+	Results     chan Result
+}
+
 func CreateSpiderTask(resources chan Resource, results chan Result, urls chan string, finish chan bool) Task {
 	task := SpiderTask{
 		Name:      "default downLoad task",
@@ -36,51 +51,45 @@ func CreateSpiderTask(resources chan Resource, results chan Result, urls chan st
 }
 
 func (this *SpiderTask) Start() {
-	go func() {
-		for true {
-			//从channel中取出url进行抓取
-			url := <-this.Urls
-			response, err := http.Get(url)
-			if err != nil {
-				log.Info(err.Error())
-				return
-			}
-			body, err := ioutil.ReadAll(response.Body)
-			var result map[string]interface{}
-			err = json.Unmarshal(body, &result)
-			if err != nil {
-				log.Error(err.Error())
-				return
-			}
-			//解析为model切片,供程序后续使用
-			tvs, err := ParseJson(body)
-			if err != nil {
-				log.Info(err.Error())
-				return
-			}
-			log.Info("[爬取到内容]:", tvs)
-			// 存入chnnel
-			for e := range tvs {
-				this.Results <- tvs[e]
-				queryParams := QueryParams(url)
-				this.Resources <- Resource{
-					Url:  tvs[e].Image,
-					Type: queryParams["type"],
-					Tag:  queryParams["tag"],
+	for i := 0; i < 1000; i++ {
+		go func() {
+			for true {
+				//从channel中取出url进行抓取
+				url := <-this.Urls
+				response, err := http.Get(url)
+				if err != nil {
+					log.Info(err.Error())
+					return
 				}
+				body, err := ioutil.ReadAll(response.Body)
+				var result map[string]interface{}
+				err = json.Unmarshal(body, &result)
+				if err != nil {
+					log.Error(err.Error())
+					return
+				}
+				//解析为model切片,供程序后续使用
+				tvs, err := ParseJson(body)
+				if err != nil {
+					log.Info(err.Error())
+					return
+				}
+				log.Info("[爬取到内容]:", tvs)
+				// 存入chnnel
+				for e := range tvs {
+					this.Results <- tvs[e]
+					queryParams := QueryParams(url)
+					this.Resources <- Resource{
+						Url:  tvs[e].Image,
+						Type: queryParams["type"],
+						Tag:  queryParams["tag"],
+					}
+				}
+				response.Body.Close()
 			}
-			response.Body.Close()
-		}
-	}()
+		}()
+	}
 	log.Info("[蜘蛛任务启动完成]")
-}
-
-//下载器任务
-type DownLoadTask struct {
-	Name     string
-	DirPath  string
-	Resource chan Resource //chan,协程使用
-	Finish   chan bool     //chan,作为工作停止信号
 }
 
 func CreateDownLoadTask(dirPath string, resouce chan Resource, finish chan bool) Task {
@@ -94,9 +103,7 @@ func CreateDownLoadTask(dirPath string, resouce chan Resource, finish chan bool)
 }
 
 func (this *DownLoadTask) Start() {
-	const routines = 10000 //设定rouines数量
-	log.Info("[多线程下载器启动完成]")
-	for i := 0; i < routines; i++ {
+	for i := 0; i < 1000; i++ {
 		go func() {
 			for true {
 				//从channel取得图片url
@@ -124,13 +131,7 @@ func (this *DownLoadTask) Start() {
 			}
 		}()
 	}
-}
-
-//数据持久化任务
-type PersistenceTask struct {
-	Name        string
-	Persistence Persistence
-	Results     chan Result
+	log.Info("[多线程下载器启动完成]")
 }
 
 func CreatePersistenceTask(persistence Persistence, results chan Result) Task {
@@ -147,8 +148,7 @@ func (this *PersistenceTask) Start() {
 		log.Error("[持久化任务启动失败,请检查数据库配置]")
 		return //没有配置对应的数据库,直接返回
 	}
-	log.Info("[持久化任务启动完成]")
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 1000; i++ {
 		go func() {
 			for true {
 				tv := <-this.Results
@@ -160,6 +160,8 @@ func (this *PersistenceTask) Start() {
 			}
 		}()
 	}
+	log.Info("[持久化任务启动完成]")
+
 }
 
 type PrepareTask struct {
@@ -181,8 +183,8 @@ func (this *PrepareTask) Start() {
 	log.Info("[超链接预处理器启动完成]")
 }
 
-//获取tag,解析为url提供蜘蛛任务进行爬取
 func parseUrls(tp string, urls chan string) {
+	//获取tag,解析为url提供蜘蛛任务进行爬取
 	type Tags struct {
 		Tags []string `json:"tags"`
 	}
