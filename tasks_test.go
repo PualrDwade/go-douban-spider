@@ -6,8 +6,7 @@ import (
 
 func TestCreateDownLoadTask(t *testing.T) {
 	resource := make(chan Resource)
-	finish := make(chan bool)
-	task := CreateDownLoadTask("./download", resource, finish)
+	task := CreateDownLoadTask("./download", resource)
 	if task == nil {
 		t.Fail()
 	}
@@ -15,8 +14,7 @@ func TestCreateDownLoadTask(t *testing.T) {
 
 func TestDownLoadTask_Start(t *testing.T) {
 	resource := make(chan Resource)
-	finish := make(chan bool)
-	task := CreateDownLoadTask("./download", resource, finish)
+	task := CreateDownLoadTask("./download", resource)
 	if task == nil {
 		t.Fail()
 	}
@@ -27,9 +25,6 @@ func TestDownLoadTask_Start(t *testing.T) {
 			Type: "tv",
 			Tag:  "hot",
 		}
-	}
-	for i := 0; i < 10; i++ {
-		<-finish
 	}
 }
 

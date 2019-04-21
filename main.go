@@ -15,10 +15,9 @@ func main() {
 	urls := make(chan string)
 	results := make(chan Result)
 	resources := make(chan Resource)
-	finish := make(chan bool)
 
 	//1.启动下载器任务
-	downLoadTask := CreateDownLoadTask("./download", resources, finish)
+	downLoadTask := CreateDownLoadTask("./download", resources)
 	go downLoadTask.Start()
 
 	//2.启动持久化任务
@@ -26,13 +25,13 @@ func main() {
 	go persistenceTask.Start()
 
 	//3.启动蜘蛛任务
-	spiderTask := CreateSpiderTask(resources, results, urls, finish)
+	spiderTask := CreateSpiderTask(resources, results, urls)
 	go spiderTask.Start()
 
 	//4.启动预处理器任务
 	prepareTask := CreatePrepareTask(urls)
 	go prepareTask.Start()
 
-	time.Sleep(time.Second * 30)
+	time.Sleep(time.Second * 300)
 	log.Info("爬虫程序退出")
 }

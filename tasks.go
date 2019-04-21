@@ -21,7 +21,6 @@ type SpiderTask struct {
 	Resources chan Resource //爬取资源
 	Results   chan Result   //爬取结果
 	Urls      chan string   //请求链接
-	Finish    chan bool     //结束标签
 }
 
 //下载器任务
@@ -29,7 +28,6 @@ type DownLoadTask struct {
 	Name     string
 	DirPath  string
 	Resource chan Resource //chan,协程使用
-	Finish   chan bool     //chan,作为工作停止信号
 }
 
 //数据持久化任务
@@ -39,13 +37,12 @@ type PersistenceTask struct {
 	Results     chan Result
 }
 
-func CreateSpiderTask(resources chan Resource, results chan Result, urls chan string, finish chan bool) Task {
+func CreateSpiderTask(resources chan Resource, results chan Result, urls chan string) Task {
 	task := SpiderTask{
 		Name:      "default downLoad task",
 		Resources: resources,
 		Results:   results,
 		Urls:      urls,
-		Finish:    finish,
 	}
 	return &task
 }
@@ -92,12 +89,11 @@ func (this *SpiderTask) Start() {
 	log.Info("[蜘蛛任务启动完成]")
 }
 
-func CreateDownLoadTask(dirPath string, resouce chan Resource, finish chan bool) Task {
+func CreateDownLoadTask(dirPath string, resouce chan Resource) Task {
 	task := DownLoadTask{
 		Name:     "default downLoad task",
 		DirPath:  dirPath,
 		Resource: resouce,
-		Finish:   finish,
 	}
 	return &task
 }
@@ -123,7 +119,6 @@ func (this *DownLoadTask) Start() {
 				out, _ := os.Create(savePath + "/" + imgName)
 				_, _ = io.Copy(out, response.Body)
 				log.Info("[图片]:", imgName, "下载完成")
-				this.Finish <- true
 				_ = os.Chdir("..")
 				_ = os.Chdir("..")
 				response.Body.Close()
