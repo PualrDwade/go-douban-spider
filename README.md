@@ -4,7 +4,7 @@
 
 ## 简介
 
-基于go的豆瓣电影多线程爬虫
+基于go的豆瓣电影多线程爬虫,基于goroutine轻量级协程与channel通信机制实现并发爬虫,可供学习使用
 
 
 ## 架构
@@ -32,3 +32,13 @@ go spiderTask.Start()
 prepareTask := CreatePrepareTask(urls)
 go prepareTask.Start()
 ```
+
+## 爬取结果
+
+![](https://i.loli.net/2019/04/21/5cbbe74cef82e.png)
+
+## todo
+
+- [ ] 抽取公共配置到yml文件中
+- [ ] 提供代理池功能
+- [ ] 提供更加健壮的运行时机制
