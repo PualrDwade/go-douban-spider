@@ -42,7 +42,7 @@ go prepareTask.Start()
 
 ## 构建&使用
 
-- 克隆项目到本地 : git clone https://github.com/PualrDwade/go-douban-spider.git
+- 克隆项目到本地
 - 使用 go build 进行编译,得到 go-douban-spider(.exe) 二进制可执行文件
 - windows下执行 : go-douban-spider.exe -t [运行时间]
 - linux下首先执行 : chmod 777 go-douban-spider,随后再执行:go-douban-spider.exe -t [运行时间]
