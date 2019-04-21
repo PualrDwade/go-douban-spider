@@ -119,8 +119,6 @@ func (this *DownLoadTask) Start() {
 				out, _ := os.Create(savePath + "/" + imgName)
 				_, _ = io.Copy(out, response.Body)
 				log.Info("[图片]:", imgName, "下载完成")
-				_ = os.Chdir("..")
-				_ = os.Chdir("..")
 				response.Body.Close()
 				out.Close()
 			}

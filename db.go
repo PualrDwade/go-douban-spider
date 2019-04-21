@@ -18,7 +18,7 @@ type Persistence interface {
 func CreateMonoPersistence() Persistence {
 	mongoClient := new(mongoPersistence)
 	ctx, _ := context.WithTimeout(context.TODO(), 2*time.Second)
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:27017"))
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://120.79.206.32:27017"))
 	if err != nil {
 		log.Error(err.Error())
 		return nil
