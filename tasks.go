@@ -18,23 +18,23 @@ type Task interface {
 //爬虫任务
 type SpiderTask struct {
 	Name      string
-	Resources chan Resource //爬取资源
-	Results   chan Result   //爬取结果
-	Urls      chan string   //请求链接
+	Resources chan<- Resource //爬取资源
+	Results   chan<- Result   //爬取结果
+	Urls      <-chan string   //请求链接
 }
 
 //下载器任务
 type DownLoadTask struct {
 	Name     string
 	DirPath  string
-	Resource chan Resource //chan,协程使用
+	Resource <-chan Resource //chan,协程使用
 }
 
 //数据持久化任务
 type PersistenceTask struct {
 	Name        string
 	Persistence Persistence
-	Results     chan Result
+	Results     <-chan Result
 }
 
 func CreateSpiderTask(resources chan Resource, results chan Result, urls chan string) Task {
@@ -50,7 +50,7 @@ func CreateSpiderTask(resources chan Resource, results chan Result, urls chan st
 func (this *SpiderTask) Start() {
 	for i := 0; i < 1000; i++ {
 		go func() {
-			for true {
+			for {
 				//从channel中取出url进行抓取
 				url := <-this.Urls
 				response, err := http.Get(url)
