@@ -4,7 +4,7 @@
 
 ## 简介
 
-基于go的豆瓣电影多线程爬虫,基于goroutine轻量级协程与channel通信机制实现高效并发,目前仅供学习使用
+基于go的豆瓣电影多线程爬虫,爬取豆瓣电影与电视剧内容、下载相应资源。支持自定义持久化(mongodb、mysql)。基于goroutine轻量级协程与channel通信机制实现高效并发,目前仅供学习使用。
 
 
 ## 架构&思路
@@ -42,7 +42,7 @@ go prepareTask.Start()
 
 ## 构建&使用
 
-- 克隆项目到本地 : https://github.com/PualrDwade/go-douban-spider.git
+- 克隆项目到本地
 - 使用 go build 进行编译,得到 go-douban-spider(.exe) 二进制可执行文件
 - windows下执行 : go-douban-spider.exe -t [运行时间]
 - linux下首先执行 : chmod 777 go-douban-spider,随后再执行:go-douban-spider.exe -t [运行时间]
