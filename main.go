@@ -15,11 +15,11 @@ func main() {
 		return
 	}
 	execute := args[2]
+
 	// 1.预处理器->解析url->urls(chan)-生产者
 	// 2.蜘蛛任务->得到results-tv(chan)*2 -(消费者,消费urls)+(生产者)
 	// 3.持久化引擎->消费results1-tv(chan)->持久化->消费者
 	// 4.下载器->消费results2-tv(chan)->下载model中的图片资源->消费者
-
 	urls := make(chan string)
 	results := make(chan Result)
 	resources := make(chan Resource)

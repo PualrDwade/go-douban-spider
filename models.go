@@ -18,6 +18,7 @@ type Resource struct {
 	Url  string
 	Type string
 	Tag  string
+	Name string
 }
 
 // 解析json

@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	"strings"
 )
 
 type Task interface {
@@ -80,6 +79,7 @@ func (this *SpiderTask) Start() {
 						Url:  tvs[e].Image,
 						Type: queryParams["type"],
 						Tag:  queryParams["tag"],
+						Name: tvs[e].Title,
 					}
 				}
 				response.Body.Close()
@@ -102,11 +102,10 @@ func (this *DownLoadTask) Start() {
 	for i := 0; i < 1000; i++ {
 		go func() {
 			for true {
-				//从channel取得图片url
+				// 从channel取得图片url
 				resource := <-this.Resource
-				//切割url得到文件名
-				urlSplits := strings.Split(resource.Url, "/")
-				imgName := urlSplits[len(urlSplits)-1]
+				// 取得文件名
+				imgName := resource.Name
 				log.Info("[正在下载图片]:", imgName)
 				response, err := http.Get(resource.Url)
 				if err != nil {
