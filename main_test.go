@@ -24,6 +24,7 @@ func TestDownLoadTask_Start(t *testing.T) {
 			Url:  "https://www.baidu.com/img/bd_logo1.png",
 			Type: "tv",
 			Tag:  "hot",
+			Name: "百度",
 		}
 	}
 }

@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 )
 
 type Task interface {
@@ -102,10 +103,12 @@ func (this *DownLoadTask) Start() {
 	for i := 0; i < 1000; i++ {
 		go func() {
 			for true {
-				// 从channel取得图片url
+				//从channel取得图片url
 				resource := <-this.Resource
-				// 取得文件名
-				imgName := resource.Name
+				//切割url得到文件类型
+				urlSplits := strings.Split(resource.Url, ".")
+				imgFileType := urlSplits[len(urlSplits)-1]
+				imgName := resource.Name + "." + imgFileType
 				log.Info("[正在下载图片]:", imgName)
 				response, err := http.Get(resource.Url)
 				if err != nil {
