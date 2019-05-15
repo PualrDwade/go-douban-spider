@@ -17,7 +17,7 @@ type Persistence interface {
 func CreateMonoPersistence() Persistence {
 	mongoClient := new(mongoPersistence)
 	ctx, _ := context.WithTimeout(context.TODO(), 2*time.Second)
-	client, _ := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://120.79.206.32:27017"))
+	client, _ := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:27017"))
 	mongoClient.collection = client.Database("douban").Collection("tv")
 	return mongoClient
 }
