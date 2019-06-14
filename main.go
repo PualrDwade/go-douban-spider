@@ -1,10 +1,11 @@
 package main
 
 import (
-	"github.com/siddontang/go/log"
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/siddontang/go/log"
 )
 
 func main() {
