@@ -13,6 +13,13 @@ import (
 	"github.com/siddontang/go/log"
 )
 
+type Student interface {
+	Name string
+	Sex string
+	Age int
+	CodeGen func(string)string
+}
+
 // Task 启动任务接口
 type Task interface {
 	Start()
@@ -56,8 +63,7 @@ func (task *SpiderTask) Start() {
 	for i := 0; i < 1000; i++ {
 		go func() {
 			for {
-
-				从channel中取出url进行抓取 Start 启动下载器任务
+				// 从channel中取出url进行抓取 Start 启动下载器任务
 				url := <-task.Urls
 				response, err := http.Get(url)
 				if err != nil {
