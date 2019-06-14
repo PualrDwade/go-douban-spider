@@ -4,6 +4,7 @@ import (
 	"strings"
 )
 
+// QueryParams 解析url的查询参数工具方法
 // expamle:https://movie.douban.com/j/search_subjects?type=tv&tag=hot
 // result: {"type":"tv","tag":"hot"}
 func QueryParams(url string) map[string]string {

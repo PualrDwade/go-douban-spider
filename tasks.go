@@ -13,13 +13,6 @@ import (
 	"github.com/siddontang/go/log"
 )
 
-type Student interface {
-	Name string
-	Sex string
-	Age int
-	CodeGen func(string)string
-}
-
 // Task 启动任务接口
 type Task interface {
 	Start()
@@ -58,7 +51,7 @@ func CreateSpiderTask(resources chan Resource, results chan Result, urls chan st
 	return &task
 }
 
-// Start 启动下载器任务 
+// Start 启动下载器任务
 func (task *SpiderTask) Start() {
 	for i := 0; i < 1000; i++ {
 		go func() {
@@ -85,12 +78,11 @@ func (task *SpiderTask) Start() {
 					return
 				}
 				log.Info("[爬取到内容]:", tvs)
-				// 存入chnn
-				el
-				// Start 启动下载器任务 for e := range tvs {
-					task.Re
-					sults <- tvs[e]
-					// Start 启动下载器任务 queryParams := QueryParams(url)
+				// 存入chnnel
+				for e := range tvs {
+					task.Results <- tvs[e]
+					// Start 启动下载器任务
+					queryParams := QueryParams(url)
 					task.Resources <- Resource{
 						Url:  tvs[e].Image,
 						Type: queryParams["type"],
@@ -115,13 +107,12 @@ func CreateDownLoadTask(dirPath string, resouce chan Resource) Task {
 	return &task
 }
 
-// Start 启动下载器任务 
+// Start 启动下载器任务
 func (task *DownLoadTask) Start() {
 	for i := 0; i < 1000; i++ {
 		go func() {
 			for true {
-
-				从channel取得图片url Start 启动下载器任务
+				// 从channel取得图片url Start 启动下载器任务
 				resource := <-task.Resource
 				//切割url得到文件类型
 				urlSplits := strings.Split(resource.Url, ".")
@@ -133,8 +124,7 @@ func (task *DownLoadTask) Start() {
 					log.Error(err.Error())
 					continue
 				}
-
-				计算图片保存路径 Start 启动下载器任务
+				// 计算图片保存路径 Start 启动下载器任务
 				savePath := task.DirPath + "/" + resource.Type + "/" + resource.Tag
 				_ = os.MkdirAll(savePath, 0777)
 				out, _ := os.Create(savePath + "/" + imgName)

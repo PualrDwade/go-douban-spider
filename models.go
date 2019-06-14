@@ -2,7 +2,7 @@ package main
 
 import "encoding/json"
 
-// 实体model
+// Result 实体model
 type Result struct {
 	Id       string `json:"id"`       //豆瓣ID
 	Rate     string `json:"rate"`     //评分
@@ -13,7 +13,7 @@ type Result struct {
 	IsNew    bool   `json:"is_new"`   //是否是新TV
 }
 
-// 资源model
+// Resource 资源model
 type Resource struct {
 	Url  string
 	Type string
@@ -21,7 +21,7 @@ type Resource struct {
 	Name string
 }
 
-// 解析json
+// ParseJson 解析json
 func ParseJson(content []byte) ([]Result, error) {
 	// 首先使用map 接受json内容
 	var result map[string]interface{}

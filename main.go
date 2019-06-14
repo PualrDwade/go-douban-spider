@@ -9,7 +9,6 @@ import (
 )
 
 func main() {
-
 	args := os.Args
 	if len(args) != 3 {
 		log.Error("please use -t [time] to set the programe-execute's time")
