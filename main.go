@@ -20,9 +20,9 @@ func main() {
 	// 2.蜘蛛任务->得到results-tv(chan)*2 -(消费者,消费urls)+(生产者)
 	// 3.持久化引擎->消费results1-tv(chan)->持久化->消费者
 	// 4.下载器->消费results2-tv(chan)->下载model中的图片资源->消费者
-	urls := make(chan string)
-	results := make(chan Result)
-	resources := make(chan Resource)
+	urls := make(chan string, 5000)
+	results := make(chan Result, 5000)
+	resources := make(chan Resource, 5000)
 
 	//1.启动下载器任务
 	downLoadTask := CreateDownLoadTask("./download", resources)

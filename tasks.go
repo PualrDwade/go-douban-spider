@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -16,6 +15,52 @@ import (
 // Task 启动任务接口
 type Task interface {
 	Start()
+}
+
+// PrepareTask 预处理任务结构
+type PrepareTask struct {
+	Name string
+	Urls chan string //爬取的链接
+}
+
+// CreatePrepareTask 工厂方法，返回预处理任务
+func CreatePrepareTask(urls chan string) Task {
+	task := PrepareTask{
+		Name: "default PrepareTask",
+		Urls: urls,
+	}
+	return &task
+}
+
+// Start 启动url预处理任务
+func (task *PrepareTask) Start() {
+	parseURL := func(kind string) {
+		//获取tag,解析为url提供蜘蛛任务进行爬取
+		type Tags struct {
+			Tags []string `json:"tags"`
+		}
+		response, err := WrapperRequest(http.MethodGet, "https://movie.douban.com/j/search_tags?type="+kind, nil)
+		defer response.Body.Close()
+		if err != nil {
+			log.Error(err.Error())
+			return
+		}
+		var tags Tags
+		body, err := ioutil.ReadAll(response.Body)
+		err = json.Unmarshal(body, &tags)
+		if err != nil {
+			log.Error(err.Error())
+			return
+		}
+		for e := range tags.Tags {
+			var url = "https://movie.douban.com/j/search_subjects?type=" + kind + "&tag=" + tags.Tags[e] + "&page_limit=" + strconv.Itoa(1000000) + "&page_start=0"
+			log.Info("[parse url:]", url)
+			task.Urls <- url //放入channel中
+		}
+	}
+	go parseURL("tv")
+	go parseURL("movie")
+	log.Info("[PrepareTask]:超链接预处理器启动完成")
 }
 
 // SpiderTask 爬虫任务
@@ -60,8 +105,7 @@ func (task *SpiderTask) Start() {
 				url := <-task.Urls
 				response, err := http.Get(url)
 				if err != nil {
-					log.Fatalln(err.Error())
-					log.Info(err.Error())
+					log.Fatal(err.Error())
 					return
 				}
 				body, err := ioutil.ReadAll(response.Body)
@@ -77,7 +121,7 @@ func (task *SpiderTask) Start() {
 					log.Info(err.Error())
 					return
 				}
-				log.Info("[爬取到内容]:", tvs)
+				log.Info("[SpiderTask]:爬取到内容->", tvs)
 				// 存入chnnel
 				for e := range tvs {
 					task.Results <- tvs[e]
@@ -94,7 +138,7 @@ func (task *SpiderTask) Start() {
 			}
 		}()
 	}
-	log.Info("[蜘蛛任务启动完成]")
+	log.Info("[SpiderTask]:蜘蛛任务启动完成")
 }
 
 // CreateDownLoadTask 工厂方法 返回下载器
@@ -118,24 +162,23 @@ func (task *DownLoadTask) Start() {
 				urlSplits := strings.Split(resource.Url, ".")
 				imgFileType := urlSplits[len(urlSplits)-1]
 				imgName := resource.Name + "." + imgFileType
-				log.Info("[正在下载图片]:", imgName)
-				response, err := http.Get(resource.Url)
+				response, err := WrapperRequest(http.MethodGet, resource.Url, nil)
 				if err != nil {
 					log.Error(err.Error())
 					continue
 				}
-				// 计算图片保存路径 Start 启动下载器任务
+				// 判断图片保存路径 Start 启动下载器任务
 				savePath := task.DirPath + "/" + resource.Type + "/" + resource.Tag
 				_ = os.MkdirAll(savePath, 0777)
 				out, _ := os.Create(savePath + "/" + imgName)
-				_, _ = io.Copy(out, response.Body)
-				log.Info("[图片]:", imgName, "下载完成")
+				io.Copy(out, response.Body)
+				log.Info("[DownLoadTask]:图片", imgName, "下载完成")
 				response.Body.Close()
 				out.Close()
 			}
 		}()
 	}
-	log.Info("[多线程下载器启动完成]")
+	log.Info("[DownLoadTask]多线程下载器启动完成")
 }
 
 // CreatePersistenceTask 工厂方法 返回Task
@@ -156,7 +199,7 @@ func (task *PersistenceTask) Start() {
 				tv := <-task.Results
 				id, err := task.Persistence.SaveOne(tv)
 				if id == nil {
-					log.Error("[持久化配置]:失效,routine退出")
+					log.Error("[persistenceTask]:持久化失败")
 					return
 				}
 				if err != nil {
@@ -166,53 +209,6 @@ func (task *PersistenceTask) Start() {
 			}
 		}()
 	}
-	log.Info("[持久化任务启动完成]")
+	log.Info("[PersistenceTask]:持久化任务启动完成")
 
-}
-
-// PrepareTask 预处理任务结构
-type PrepareTask struct {
-	Name string
-	Urls chan string //爬取的链接
-}
-
-// CreatePrepareTask 工厂方法，返回预处理任务
-func CreatePrepareTask(urls chan string) Task {
-	task := PrepareTask{
-		Name: "default PrepareTask",
-		Urls: urls,
-	}
-	return &task
-}
-
-// Start 启动url预处理任务
-func (task *PrepareTask) Start() {
-	go parseUrls("tv", task.Urls)
-	go parseUrls("movie", task.Urls)
-	log.Info("[超链接预处理器启动完成]")
-}
-
-func parseUrls(tp string, urls chan string) {
-	//获取tag,解析为url提供蜘蛛任务进行爬取
-	type Tags struct {
-		Tags []string `json:"tags"`
-	}
-	response, err := http.Get("https://movie.douban.com/j/search_tags?type=" + tp)
-	if err != nil {
-		log.Error(err.Error())
-		return
-	}
-	var tags Tags
-	body, err := ioutil.ReadAll(response.Body)
-	err = json.Unmarshal(body, &tags)
-	if err != nil {
-		log.Error(err.Error())
-		return
-	}
-	for e := range tags.Tags {
-		var url = "https://movie.douban.com/j/search_subjects?type=" + tp + "&tag=" + tags.Tags[e] + "&page_limit=" + strconv.Itoa(1000000) + "&page_start=0"
-		log.Info("[parse url:]", url)
-		urls <- url //放入channel中
-	}
-	defer response.Body.Close()
 }
