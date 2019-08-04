@@ -21,7 +21,7 @@ type Resource struct {
 	Name string
 }
 
-// ParseJson 解析json
+// ParseJson 解析json数据
 func ParseJson(content []byte) ([]Result, error) {
 	// 首先使用map 接受json内容
 	var result map[string]interface{}
