@@ -4,7 +4,7 @@
 
 ## 简介
 
-基于go的豆瓣电影多线程爬虫,爬取豆瓣电影与电视剧内容、下载相应资源。支持自定义持久化(mongodb、mysql)。基于goroutine轻量级协程与channel通信机制实现高效并发,目前仅供学习使用。
+基于go的豆瓣电影多线程爬虫,爬取豆瓣电影与电视剧内容、下载相应资源。支持自定义持久化(mongodb、mysql)。基于goroutine轻量级协程与channel通信机制实现高效并发,代码量很少，适合对于golang还不太熟悉的小伙伴学习使用~
 
 
 ## 架构&思路
@@ -19,9 +19,13 @@
 
 ## 核心流程
 ```go
-urls := make(chan string)
-results := make(chan Result)
-resources := make(chan Resource)
+// 1.预处理器->解析url->urls(chan)-生产者
+// 2.蜘蛛任务->得到results-tv(chan)*2 -(消费者,消费urls)+(生产者)
+// 3.持久化引擎->消费results1-tv(chan)->持久化->消费者
+// 4.下载器->消费results2-tv(chan)->下载model中的图片资源->消费者
+urls := make(chan string, 5000)
+results := make(chan Result, 5000)
+resources := make(chan Resource, 5000)
 
 //1.启动下载器任务
 downLoadTask := CreateDownLoadTask("./download", resources)
@@ -42,17 +46,37 @@ go prepareTask.Start()
 
 ## 构建&使用
 
-- 克隆项目到本地
-- 使用 go build 进行编译,得到 go-douban-spider(.exe) 二进制可执行文件
-- windows下执行 : go-douban-spider.exe -t [运行时间]
-- linux下首先执行 : chmod 777 go-douban-spider,随后再执行:go-douban-spider -t [运行时间]
+1.获取项目
+
+```
+git clone https://github.com/PualrDwade/go-douban-spider.git
+```
+
+2.编译
+
+```makefile
+make
+```
+
+3.运行
+
+```makefile
+make run
+```
+
+4.测试
+
+```	makefile
+make test
+```
 
 ## 结果展示
 
-![](https://i.loli.net/2019/04/21/5cbbe74cef82e.png)
+![](https://i.loli.net/2019/08/04/hvAMSKXjFUWB3Vy.png)
 
 ## todo
 
-- [ ] 抽取公共配置到yml文件中,提供定制化
+- [x] 提供更加健壮的运行时机制,减少panic错误
+- [x] 加入随机User-Agent，减少handshake error
 - [ ] 提供代理池功能,提高反反爬虫能力
-- [ ] 提供更加健壮的运行时机制,减少panic错误
+- [ ] 抽取公共配置到yml文件中,提供定制化
