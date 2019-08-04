@@ -46,28 +46,43 @@ go prepareTask.Start()
 
 ## 构建&使用
 
-1.获取项目
+1.gopath初始化
 
+```shell
+cd $GOPATH/src
+mkdir -p github.com/PualrDwade
+cd github.com/PualrDwade
 ```
+
+2.获取项目
+
+```shell
 git clone https://github.com/PualrDwade/go-douban-spider.git
+cd go-douban-spider
 ```
 
-2.编译
+3.编译
 
 ```makefile
 make
 ```
 
-3.运行
+4.运行
 
 ```makefile
 make run
 ```
 
-4.测试
+5.测试
 
 ```	makefile
 make test
+```
+
+6.清理
+
+```makefile
+make clean
 ```
 
 ## 结果展示
