@@ -44,7 +44,7 @@ func RandomUserAgent() string {
 	return agent[r.Intn(length)]
 }
 
-// WrapperRequest返回预设http请求
+// WrapperRequest 返回预设http请求
 func WrapperRequest(method, url string, body io.Reader) (resp *http.Response, err error) {
 	request, err := http.NewRequest(method, url, body)
 	if err != nil {
