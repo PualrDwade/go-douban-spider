@@ -116,7 +116,7 @@ func (task *SpiderTask) Start() {
 					return
 				}
 				//解析为model切片,供程序后续使用
-				tvs, err := ParseJson(body)
+				tvs, err := ParseJSON(body)
 				if err != nil {
 					log.Info(err.Error())
 					return
@@ -128,7 +128,7 @@ func (task *SpiderTask) Start() {
 					// Start 启动下载器任务
 					queryParams := QueryParams(url)
 					task.Resources <- Resource{
-						Url:  tvs[e].Image,
+						URL:  tvs[e].Image,
 						Type: queryParams["type"],
 						Tag:  queryParams["tag"],
 						Name: tvs[e].Title,
@@ -159,10 +159,10 @@ func (task *DownLoadTask) Start() {
 				// 从channel取得图片url Start 启动下载器任务
 				resource := <-task.Resource
 				//切割url得到文件类型
-				urlSplits := strings.Split(resource.Url, ".")
+				urlSplits := strings.Split(resource.URL, ".")
 				imgFileType := urlSplits[len(urlSplits)-1]
 				imgName := resource.Name + "." + imgFileType
-				response, err := WrapperRequest(http.MethodGet, resource.Url, nil)
+				response, err := WrapperRequest(http.MethodGet, resource.URL, nil)
 				if err != nil {
 					log.Error(err.Error())
 					continue
@@ -210,5 +210,4 @@ func (task *PersistenceTask) Start() {
 		}()
 	}
 	log.Info("[PersistenceTask]:持久化任务启动完成")
-
 }

@@ -4,10 +4,10 @@ import "encoding/json"
 
 // Result 实体model
 type Result struct {
-	Id       string `json:"id"`       //豆瓣ID
+	ID       string `json:"id"`       //豆瓣ID
 	Rate     string `json:"rate"`     //评分
 	Title    string `json:"title"`    //电视剧标题
-	Url      string `json:"url"`      //TV链接
+	URL      string `json:"url"`      //TV链接
 	Playable bool   `json:"playable"` //是否可观看
 	Image    string `json:"cover"`    //封面链接
 	IsNew    bool   `json:"is_new"`   //是否是新TV
@@ -15,14 +15,14 @@ type Result struct {
 
 // Resource 资源model
 type Resource struct {
-	Url  string
+	URL  string
 	Type string
 	Tag  string
 	Name string
 }
 
-// ParseJson 解析json数据
-func ParseJson(content []byte) ([]Result, error) {
+// ParseJSON 解析json数据
+func ParseJSON(content []byte) ([]Result, error) {
 	// 首先使用map 接受json内容
 	var result map[string]interface{}
 	err := json.Unmarshal(content, &result)
