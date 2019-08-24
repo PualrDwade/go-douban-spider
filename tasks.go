@@ -39,7 +39,7 @@ func (task *PrepareTask) Start() {
 		type Tags struct {
 			Tags []string `json:"tags"`
 		}
-		response, err := WrapperRequest(http.MethodGet, "https://movie.douban.com/j/search_tags?type="+kind, nil)
+		response, err := Request(http.MethodGet, "https://movie.douban.com/j/search_tags?type="+kind, nil)
 		defer response.Body.Close()
 		if err != nil {
 			log.Error(err.Error())
@@ -162,7 +162,7 @@ func (task *DownLoadTask) Start() {
 				urlSplits := strings.Split(resource.URL, ".")
 				imgFileType := urlSplits[len(urlSplits)-1]
 				imgName := resource.Name + "." + imgFileType
-				response, err := WrapperRequest(http.MethodGet, resource.URL, nil)
+				response, err := Request(http.MethodGet, resource.URL, nil)
 				if err != nil {
 					log.Error(err.Error())
 					continue
