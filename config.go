@@ -28,20 +28,20 @@ var config = Config{
 	TaskRoutines:     100,
 }
 
-func loadConfig() Config {
+func globalConfig() Config {
+	return config
+}
+func loadConfig() {
 	data, err := ioutil.ReadFile("config.json")
 	if err != nil {
 		log.Println("load config.json failed, use default config")
-		return config
 	}
 	err = json.Unmarshal(data, &config)
 	if err != nil {
 		log.Println("unmarshal config.json failed, use default config")
-		return config
 	}
 	// register proxy
 	for name, addr := range config.ProxyPool {
 		registerProxy(name, addr)
 	}
-	return config
 }

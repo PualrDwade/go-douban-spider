@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"go.mongodb.org/mongo-driver/mongo"
@@ -16,14 +17,20 @@ type Persistence interface {
 	SaveOne(document interface{}) (*mongo.InsertOneResult, error)
 }
 
-// CreateMonoPersistence 创建mongo客户端
-func CreateMonoPersistence() Persistence {
-	mongoClient := new(mongoPersistence)
-	ctx, cancer := context.WithTimeout(context.TODO(), 2*time.Second)
-	defer cancer()
-	client, _ := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://localhost:27017"))
-	mongoClient.collection = client.Database("douban").Collection("tv")
-	return mongoClient
+// CreatePersistence 创建mongo客户端
+func CreatePersistence() Persistence {
+	if globalConfig().PersistanceModel == "mongo" {
+		mongoClient := new(mongoPersistence)
+		ctx, cancer := context.WithTimeout(context.TODO(), 2*time.Second)
+		defer cancer()
+		client, _ := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://"+globalConfig().MongoURL))
+		mongoClient.collection = client.Database("douban").Collection("tv")
+		return mongoClient
+	} else {
+		// todo implement mysql persistence
+		log.Fatal("todo implement mysql persistence")
+		return nil
+	}
 }
 
 type mongoPersistence struct {

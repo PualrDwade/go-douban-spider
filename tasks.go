@@ -85,7 +85,7 @@ func CreateSpiderTask(resources chan Resource, results chan Result, urls chan st
 
 // Start 启动爬虫任务
 func (task *SpiderTask) Start() {
-	for i := 0; i < 1000; i++ {
+	for i := 0; i < globalConfig().TaskRoutines; i++ {
 		go func() {
 			for {
 				// 从channel中取出url进行抓取 Start 启动下载器任务
@@ -144,7 +144,7 @@ func CreateDownLoadTask(dirPath string, resouce chan Resource) Task {
 
 // Start 启动下载器任务
 func (task *DownLoadTask) Start() {
-	for i := 0; i < 1000; i++ {
+	for i := 0; i < globalConfig().TaskRoutines; i++ {
 		go func() {
 			for true {
 				// 从channel取得图片url Start 启动下载器任务
@@ -191,7 +191,7 @@ func CreatePersistenceTask(persistence Persistence, results chan Result) Task {
 
 // Start 启动持久化认任务
 func (task *PersistenceTask) Start() {
-	for i := 0; i < 1000; i++ {
+	for i := 0; i < globalConfig().TaskRoutines; i++ {
 		go func() {
 			for true {
 				tv := <-task.Results
