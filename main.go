@@ -1,28 +1,21 @@
 package main
 
 import (
-	"os"
-	"strconv"
+	"log"
 	"time"
-
-	"github.com/siddontang/go/log"
 )
 
 func main() {
-	args := os.Args
-	if len(args) != 3 {
-		log.Error("please use -t [time] to set the programe-execute's time")
-		return
-	}
-	execute := args[2]
+	// load configuration for application
+	config := loadConfig()
 
 	// 1.预处理器->解析url->urls(chan)-生产者
 	// 2.蜘蛛任务->得到results-tv(chan)*2 -(消费者,消费urls)+(生产者)
 	// 3.持久化引擎->消费results1-tv(chan)->持久化->消费者
 	// 4.下载器->消费results2-tv(chan)->下载model中的图片资源->消费者
-	urls := make(chan string, 5000)
-	results := make(chan Result, 5000)
-	resources := make(chan Resource, 5000)
+	urls := make(chan string, config.ChanSize)
+	results := make(chan Result, config.ChanSize)
+	resources := make(chan Resource, config.ChanSize)
 
 	//1.启动下载器任务
 	downLoadTask := CreateDownLoadTask("./download", resources)
@@ -40,7 +33,7 @@ func main() {
 	prepareTask := CreatePrepareTask(urls)
 	go prepareTask.Start()
 
-	executeTime, _ := strconv.Atoi(execute)
-	time.Sleep(time.Duration(executeTime) * time.Second)
-	log.Info("[爬虫程序退出]:爬取时间:", executeTime, "秒")
+	executeTime := config.Duration
+	time.Sleep(config.Duration * time.Second)
+	log.Println("[爬虫程序退出]:爬取时间:", executeTime, "秒")
 }

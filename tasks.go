@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"io"
 	"io/ioutil"
+	"log"
+	"math"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
-
-	"github.com/siddontang/go/log"
 )
 
 // Task 启动任务接口
@@ -40,27 +40,28 @@ func (task *PrepareTask) Start() {
 			Tags []string `json:"tags"`
 		}
 		response, err := Request(http.MethodGet, "https://movie.douban.com/j/search_tags?type="+kind, nil)
-		defer response.Body.Close()
 		if err != nil {
-			log.Error(err.Error())
-			return
+			log.Fatalf("request failed: %v", err)
 		}
+		defer response.Body.Close()
+
 		var tags Tags
 		body, err := ioutil.ReadAll(response.Body)
 		err = json.Unmarshal(body, &tags)
 		if err != nil {
-			log.Error(err.Error())
+			log.Fatalf("unmarshal failed: %v", err)
 			return
 		}
 		for e := range tags.Tags {
-			var url = "https://movie.douban.com/j/search_subjects?type=" + kind + "&tag=" + tags.Tags[e] + "&page_limit=" + strconv.Itoa(1000000) + "&page_start=0"
-			log.Info("[parse url:]", url)
+			var url = "https://movie.douban.com/j/search_subjects?type=" + kind + "&tag=" + tags.Tags[e] +
+				"&page_limit=" + strconv.Itoa(math.MaxInt32) + "&page_start=0"
+			log.Println("[parse url]:", url)
 			task.Urls <- url //放入channel中
 		}
 	}
 	go parseURL("tv")
 	go parseURL("movie")
-	log.Info("[PrepareTask]:超链接预处理器启动完成")
+	log.Println("[PrepareTask]:超链接预处理器启动完成")
 }
 
 // SpiderTask 爬虫任务
@@ -69,20 +70,6 @@ type SpiderTask struct {
 	Resources chan<- Resource //爬取资源
 	Results   chan<- Result   //爬取结果
 	Urls      <-chan string   //请求链接
-}
-
-// DownLoadTask 下载器任务
-type DownLoadTask struct {
-	Name     string
-	DirPath  string
-	Resource <-chan Resource //chan,协程使用
-}
-
-// PersistenceTask 数据持久化任务
-type PersistenceTask struct {
-	Name        string
-	Persistence Persistence
-	Results     <-chan Result
 }
 
 // CreateSpiderTask 爬虫任务工厂方法
@@ -96,32 +83,29 @@ func CreateSpiderTask(resources chan Resource, results chan Result, urls chan st
 	return &task
 }
 
-// Start 启动下载器任务
+// Start 启动爬虫任务
 func (task *SpiderTask) Start() {
 	for i := 0; i < 1000; i++ {
 		go func() {
 			for {
 				// 从channel中取出url进行抓取 Start 启动下载器任务
 				url := <-task.Urls
-				response, err := http.Get(url)
+				response, err := Request(http.MethodGet, url, nil)
 				if err != nil {
-					log.Fatal(err.Error())
-					return
+					log.Fatal(err)
 				}
 				body, err := ioutil.ReadAll(response.Body)
-				var result map[string]interface{}
+				result := make(map[string]interface{})
 				err = json.Unmarshal(body, &result)
 				if err != nil {
-					log.Error(err.Error())
-					return
+					log.Fatalf("unmarshal failed: %v", err)
 				}
 				//解析为model切片,供程序后续使用
 				tvs, err := ParseJSON(body)
 				if err != nil {
-					log.Info(err.Error())
-					return
+					log.Fatal(err)
 				}
-				log.Info("[SpiderTask]:爬取到内容->", tvs)
+				log.Println("[SpiderTask]:爬取到内容->", tvs)
 				// 存入chnnel
 				for e := range tvs {
 					task.Results <- tvs[e]
@@ -138,7 +122,14 @@ func (task *SpiderTask) Start() {
 			}
 		}()
 	}
-	log.Info("[SpiderTask]:蜘蛛任务启动完成")
+	log.Println("[SpiderTask]:蜘蛛任务启动完成")
+}
+
+// DownLoadTask 下载器任务
+type DownLoadTask struct {
+	Name     string
+	DirPath  string
+	Resource <-chan Resource //chan,协程使用
 }
 
 // CreateDownLoadTask 工厂方法 返回下载器
@@ -164,7 +155,7 @@ func (task *DownLoadTask) Start() {
 				imgName := resource.Name + "." + imgFileType
 				response, err := Request(http.MethodGet, resource.URL, nil)
 				if err != nil {
-					log.Error(err.Error())
+					log.Println(err)
 					continue
 				}
 				// 判断图片保存路径 Start 启动下载器任务
@@ -172,13 +163,20 @@ func (task *DownLoadTask) Start() {
 				_ = os.MkdirAll(savePath, 0777)
 				out, _ := os.Create(savePath + "/" + imgName)
 				io.Copy(out, response.Body)
-				log.Info("[DownLoadTask]:图片", imgName, "下载完成")
+				log.Println("[DownLoadTask]:图片", imgName, "下载完成")
 				response.Body.Close()
 				out.Close()
 			}
 		}()
 	}
-	log.Info("[DownLoadTask]多线程下载器启动完成")
+	log.Println("[DownLoadTask]多线程下载器启动完成")
+}
+
+// PersistenceTask 数据持久化任务
+type PersistenceTask struct {
+	Name        string
+	Persistence Persistence
+	Results     <-chan Result
 }
 
 // CreatePersistenceTask 工厂方法 返回Task
@@ -198,16 +196,12 @@ func (task *PersistenceTask) Start() {
 			for true {
 				tv := <-task.Results
 				id, err := task.Persistence.SaveOne(tv)
-				if id == nil {
-					log.Error("[persistenceTask]:持久化失败")
-					return
-				}
-				if err != nil {
-					log.Error(err.Error())
+				if id == nil || err != nil {
+					log.Println("[persistenceTask]:持久化失败")
 					continue
 				}
 			}
 		}()
 	}
-	log.Info("[PersistenceTask]:持久化任务启动完成")
+	log.Println("[PersistenceTask]:持久化任务启动完成")
 }

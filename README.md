@@ -16,6 +16,35 @@
 
 - [下载器]->消费可利用资源,下载model中的图片资源->作为消费者
 
+## 项目配置
+
+项目配置文件对应config.json
+```json
+// config.json
+{
+    "persistance_model": "mongo",
+    "mongo_url": "localhost:27017",
+    "mysql_url": "localhost:3306",
+    "proxy_pool": {
+        "proxy1": "11.11.11.11:7777"
+     },
+    "duration": 60,
+    "chan_size": 1000,
+    "task_routines": 30
+}
+```
+项目的默认配置如下:
+```go
+var config = Config{
+	PersistanceModel: "mongo",
+	MongoURL:         "localhost:27017",
+	MySQLURL:         "localhost:3306",
+	ProxyPool:        make(map[string]string),
+	Duration:         60,
+	ChanSize:         5000,
+	TaskRoutines:     100,
+}
+```
 
 ## 核心流程
 ```go
@@ -93,5 +122,5 @@ make clean
 
 - [x] 提供更加健壮的运行时机制,减少panic错误
 - [x] 加入随机User-Agent，减少handshake error
-- [ ] 提供代理池功能,提高反反爬虫能力
-- [ ] 抽取公共配置到yml文件中,提供定制化
+- [x] 提供代理池功能,提高反反爬虫能力
+- [x] 抽取公共配置到json文件中,提供定制化

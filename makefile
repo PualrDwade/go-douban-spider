@@ -6,8 +6,6 @@ ENVVAR=
 # 操作系统
 GOOS?=linux
 COMPONENT=go-douban-spider
-# 爬取时间
-ReptireTime=3000
 # 下载路径
 DOWNLOADPATH=download
 
@@ -18,7 +16,7 @@ test: clean build
 	$(ENVVAR) go test --test.short -race ./... $(FLAGS)
 
 run: build
-	./${COMPONENT} -t ${ReptireTime}
+	./${COMPONENT}
 	make clean
 
 clean:

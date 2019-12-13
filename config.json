@@ -1,0 +1,11 @@
+{
+  //  "persistance_model": "mongo",
+  //  "mongo_url": "localhost:27017",
+  //  "mysql_url": "localhost:3306",
+  //  "proxy_pool": {
+  //    "proxy1": "11.11.11.11:7777"
+  //  },
+  //  "duration": 60,
+  //  "chan_size": 1000,
+  //  "task_routines": 30
+}

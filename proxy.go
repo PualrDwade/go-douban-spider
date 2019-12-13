@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log"
 	"math/rand"
 	"net"
 	"net/http"
@@ -12,15 +13,16 @@ import (
 	"time"
 )
 
-var proxyPool []string
+var proxyPool map[string]string
 
 // registerProxy register proxy into proxy pool
-func registerProxy(addr string) error {
+func registerProxy(name, addr string) error {
+	log.Printf("register new proxy: %v ipaddr: %v\n", name, addr)
 	temp := strings.Split(addr, ":")
 	if len(temp) != 2 {
 		return fmt.Errorf("invalid net addr:%v", addr)
 	}
-	proxyPool = append(proxyPool, addr)
+	proxyPool[name] = addr
 	return nil
 }
 
@@ -38,11 +40,10 @@ func proxyClient() *http.Client {
 	if len(proxyPool) == 0 {
 		return http.DefaultClient
 	}
-	randNo := rand.Intn(len(proxyPool))
-	proxyAddr := proxyPool[randNo]
+	proxyAddr := getProxyAddr()
 	proxy, err := url.Parse(proxyAddr)
 	if err != nil {
-		return nil
+		log.Fatalf("parse url failed: %v", err)
 	}
 
 	netTransport := &http.Transport{
@@ -63,6 +64,15 @@ func proxyClient() *http.Client {
 		Timeout:   time.Second * 10,
 		Transport: netTransport,
 	}
+}
+
+func getProxyAddr() string {
+	// default for round robbin
+	res := ""
+	for _, v := range proxyPool {
+		res = v
+	}
+	return res
 }
 
 func userAgent() string {
