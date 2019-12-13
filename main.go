@@ -7,7 +7,7 @@ import (
 
 func main() {
 	// load configuration for application
-	loadConfig()
+	loadConfigOrDie()
 
 	// 1.预处理器->解析url->urls(chan)-生产者
 	// 2.蜘蛛任务->得到results-tv(chan)*2 -(消费者,消费urls)+(生产者)

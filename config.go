@@ -18,27 +18,20 @@ type Config struct {
 	TaskRoutines     int               `json:"task_routines"`
 }
 
-var config = Config{
-	PersistanceModel: "mongo",
-	MongoURL:         "localhost:27017",
-	MySQLURL:         "localhost:3306",
-	ProxyPool:        make(map[string]string),
-	Duration:         60,
-	ChanSize:         5000,
-	TaskRoutines:     100,
-}
+var config Config
 
 func globalConfig() Config {
 	return config
 }
-func loadConfig() {
+
+func loadConfigOrDie() {
 	data, err := ioutil.ReadFile("config.json")
 	if err != nil {
-		log.Println("load config.json failed, use default config")
+		log.Fatalf("load config.json failed: %v, use default config", err)
 	}
 	err = json.Unmarshal(data, &config)
 	if err != nil {
-		log.Println("unmarshal config.json failed, use default config")
+		log.Fatalf("unmarshal config.json failed: %v, use default config\n", err)
 	}
 	// register proxy
 	for name, addr := range config.ProxyPool {
